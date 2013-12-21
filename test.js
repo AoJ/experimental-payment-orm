@@ -84,28 +84,36 @@ function mapInspectRecursiveCallback(cb) {
     }
 }
 
-function inspectRecursiveWrapper(foreignModel) {
-    var property = foreignModel;
-    var method = property ? capitaliseFirstLetter(property) : false;
+function inspectRecursiveWrapper(foreignModels) {
+    var properties = _.isArray(foreignModels) ? foreignModels : [foreignModels];
     
     return function mapChild(container, cb) {
         var data = this.inspect();
         for (var f in data) container[f] = data[f];
+        var activeRow = this;
+        var processed = 0;
         
-        var foreignMethod = this["get"+method];
-        if(!foreignMethod) return cb(null, container);
-        
-        foreignMethod(mapInspectRecursiveCallback(function(err, childResult){
-            container[property] = childResult;
-            cb(null, container);
+        properties.forEach(function(property) {
             
-        }))
+            loadForeignTable(container, property, activeRow, function(err, res){
+                processed++;
+                if(properties.length === processed) cb(null, container);
+            })
+        })
     }
 }
 
 
-function implodeChildTable(container, property, activeRow, cb) {
-    var results = [];
+function loadForeignTable(container, property, activeRow, cb) {
+    var method = property ? capitaliseFirstLetter(property) : false;
+    
+    var foreignMethod = activeRow["get"+method];
+    if(!foreignMethod || !method) return cb(null, container);
+    
+    foreignMethod(mapInspectRecursiveCallback(function(err, childResult){
+        container[property] = childResult;
+        cb(null, container);
+    }))
 }
 
 function capitaliseFirstLetter(string)
@@ -157,7 +165,7 @@ function init(orm, db) {
         id: "deal_purchase_has_deal_variant_id",
         methods: {
             inspect: inspectRow,
-            inspectRecursive: inspectRecursiveWrapper("variant")
+            inspectRecursive: inspectRecursiveWrapper(["variant", "deal"])
         }
     })
     
@@ -196,6 +204,7 @@ function init(orm, db) {
     
 
     PurchaseVariants.hasOne('variant', DealVariants, {reverse: 'purchaseVariants'});
+    PurchaseVariants.hasOne('deal', Deal, {reverse: 'purchaseVariants'});
     PurchaseVariants.hasOne('voucher', Vouchers, {reverse: 'purchaseVariants'});
     Vouchers.hasOne("payment", Payment, {reverse: "vouchers"});
     DealVariants.hasOne("deal", Deal, {reverse: "variants"});
