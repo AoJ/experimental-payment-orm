@@ -1,10 +1,10 @@
 var orm = require("orm");
 var fs = require("fs");
 
-module.exports = function (cb) {
+module.exports = function (dsn, cb) {
     orm.settings.set("connection.debug", true);
     
-    orm.connect("mysql://zapakateldebug:tR9fruW9@lisa.allin1.cz/zapakateldebug", function (err, db) {
+    orm.connect(dsn, function (err, db) {
         if(err) throw err;
         db.settings.set("properties.association_key", "{field}");
         
