@@ -15,7 +15,7 @@ demo for use node-orm2 with some db structure, not for production, only experime
     vouchers: 
      [ { deal_purchase_id: 218,
          payment_id: 255,
-         deal_purchase_email: 'hegenbart@allin1.cz',
+         deal_purchase_email: 'email@example.com',
          purchaseVariants: 
           [ { deal_purchase_has_deal_variant_id: 215,
               deal_purchase_id: 218,
